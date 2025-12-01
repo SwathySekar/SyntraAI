@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 380px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .container { padding: 20px; }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .header h1 {
+      font-size: 26px;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .header p {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+    .status-card {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .status-row:last-child { margin-bottom: 0; }
+    .label {
+      font-size: 13px;
+      opacity: 0.9;
+    }
+    .value {
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 8px;
+    }
+    .indicator.active { background: #4CAF50; animation: pulse 2s infinite; }
+    .indicator.inactive { background: #f44336; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .button {
+      width: 100%;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 10px;
+      position: relative;
+    }
+    .button:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+    }
+    .button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .button.loading::after {
+      content: '';
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: translateY(-50%) rotate(360deg); }
+    }
+    .events-list {
+      max-height: 150px;
+      overflow-y: auto;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+    .event-item {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 8px;
+      border-radius: 6px;
+      margin-bottom: 5px;
+    }
+    .event-time {
+      opacity: 0.7;
+      font-size: 11px;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 20px 10px;
+      opacity: 0.8;
+    }
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+    .empty-state-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    .empty-state-desc {
+      font-size: 12px;
+      opacity: 0.8;
+      line-height: 1.4;
+    }
+    .template-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .template-card {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .template-card:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+    .template-icon {
+      font-size: 24px;
+      margin-bottom: 5px;
+    }
+    .template-title {
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+    .template-desc {
+      font-size: 10px;
+      opacity: 0.8;
+      line-height: 1.3;
+    }
+    .workflow-item {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .workflow-info {
+      flex: 1;
+    }
+    .workflow-title {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+    .workflow-meta {
+      font-size: 10px;
+      opacity: 0.7;
+    }
+    .workflow-toggle {
+      width: 40px;
+      height: 22px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 11px;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .workflow-toggle.active {
+      background: #4CAF50;
+    }
+    .workflow-toggle::after {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      background: white;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: all 0.3s;
+    }
+    .workflow-toggle.active::after {
+      left: 20px;
+    }
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      z-index: 1000;
+      opacity: 0;
+      transition: all 0.3s;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    .toast.success { background: #4CAF50; }
+    .toast.error { background: #f44336; }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0.9;
+    }
+    .badge {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="toast" class="toast"></div>
+    
+    <div class="header">
+      <h1><span>⚡</span> Syntra</h1>
+      <p>Intelligent Workflow Automation</p>
+    </div>
+    
+    <div class="status-card">
+      <div class="status-row">
+        <span class="label">Status</span>
+        <span class="value">
+          <span class="indicator active" id="statusIndicator"></span>
+          <span id="statusText">Active</span>
+        </span>
+      </div>
+      <div class="status-row">
+        <span class="label">Server</span>
+        <span class="value" id="serverStatus">Checking...</span>
+      </div>
+      <div class="status-row">
+        <span class="label">Events Captured</span>
+        <span class="value" id="eventCount">0</span>
+      </div>
+    </div>
+    
+    <div class="status-card" id="setupCard">
+      <div class="section-header">
+        <span class="section-title">⚙️ Setup</span>
+      </div>
+      <input type="email" id="userEmail" placeholder="your-email@example.com" 
+        style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); 
+        background: rgba(255,255,255,0.1); color: white; font-size: 13px;" />
+      <div style="font-size: 11px; opacity: 0.8; margin-top: 5px;">Default email for workflow results</div>
+      <button class="button" id="saveEmail" style="margin-top: 8px; padding: 8px;">Save Email</button>
+    </div>
+    
+    <div class="status-card" id="templatesCard">
+      <div class="section-header">
+        <span class="section-title">Quick Start Templates</span>
+      </div>
+      <div class="template-grid">
+        <div class="template-card" data-template="pdf">
+          <div class="template-icon">📄</div>
+          <div class="template-title">PDF Summary</div>
+          <div class="template-desc">Auto-summarize downloaded PDFs</div>
+        </div>
+        <div class="template-card" data-template="email">
+          <div class="template-icon">✉️</div>
+          <div class="template-title">Email Composer</div>
+          <div class="template-desc">Analyze tone when composing</div>
+        </div>
+        <div class="template-card" data-template="emailRead">
+          <div class="template-icon">📬</div>
+          <div class="template-title">Email Reader</div>
+          <div class="template-desc">Summarize emails I read</div>
+        </div>
+        <div class="template-card" data-template="article">
+          <div class="template-icon">📖</div>
+          <div class="template-title">Article Notes</div>
+          <div class="template-desc">Extract key points from articles</div>
+        </div>
+        <div class="template-card" data-template="file">
+          <div class="template-icon">🧠</div>
+          <div class="template-title">Smart Organizer</div>
+          <div class="template-desc">Auto-categorize & tag files</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="status-card">
+      <div class="section-header">
+        <span class="section-title">Create Custom Workflow</span>
+      </div>
+      <textarea id="workflowQuery" placeholder="Describe your workflow in plain English..." 
+        style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); 
+        background: rgba(255,255,255,0.1); color: white; font-size: 13px; resize: vertical; min-height: 60px;"></textarea>
+      
+      <button class="button" id="addWorkflow" style="margin-top: 10px;">
+        Create Workflow
+      </button>
+    </div>
+    
+    <div class="status-card" id="workflowsCard" style="display: none;">
+      <div class="section-header">
+        <span class="section-title">Active Workflows</span>
+        <span class="badge" id="workflowCount">0</span>
+      </div>
+      <div id="workflowsList"></div>
+    </div>
+    
+    <div class="status-card" id="resultsCard" style="display: none;">
+      <div class="label" style="margin-bottom: 10px;">Results</div>
+      <div id="resultPreview" style="font-size: 13px; margin-bottom: 10px;"></div>
+      <div style="display: flex; gap: 10px; margin-top: 10px; justify-content: center;">
+        <button id="showInPopup" style="background: rgba(76, 175, 80, 0.3); border: none; border-radius: 50%; width: 40px; height: 40px; color: white; cursor: pointer; font-size: 16px;" title="View Result">
+          👁️
+        </button>
+        <button id="emailResult" style="background: rgba(33, 150, 243, 0.3); border: none; border-radius: 50%; width: 40px; height: 40px; color: white; cursor: pointer; font-size: 16px;" title="Email Result">
+          📧
+        </button>
+      </div>
+    </div>
+    
+    <div class="status-card" id="resultView" style="display: none;">
+      <button class="button" id="backBtn" style="background: rgba(255,255,255,0.1); padding: 8px; margin-bottom: 10px;">
+        ← Back
+      </button>
+      <div id="resultContent"></div>
+      <button class="button" id="copyResult" style="margin-top: 10px;">
+        Copy
+      </button>
+      <button class="button" id="emailFromView">
+        Email
+      </button>
+    </div>
+    
+    <div class="status-card" id="eventsCard">
+      <div class="section-header">
+        <span class="section-title">Recent Activity</span>
+        <span class="badge" id="activityCount">0</span>
+      </div>
+      <div class="events-list" id="eventsList">
+        <div class="empty-state">
+          <div class="empty-state-icon">🎯</div>
+          <div class="empty-state-title">No Activity Yet</div>
+          <div class="empty-state-desc">Create a workflow above to start automating tasks</div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="mainButtons">
+      <button class="button" id="openDashboard">
+        Dashboard
+      </button>
+      
+      <button class="button" id="toggleExtension">
+        Pause
+      </button>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
