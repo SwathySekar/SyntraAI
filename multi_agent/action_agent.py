@@ -1,5 +1,6 @@
 # Action Agent - Executes dynamic actions based on user queries
-from google.adk.agents import Agent
+from google.adk.agents import Agent, ParallelAgent
+from google.genai import types
 
 
 
@@ -26,14 +27,19 @@ def process_with_dynamic_query(content: str, user_query: str) -> dict:
 
 class ActionAgent:
     def __init__(self):
+        config = types.GenerateContentConfig(
+            temperature=0.2,
+            top_p=0.95,
+            max_output_tokens=2048
+        )
         
-        # Google ADK Agent
         self.adk_agent = Agent(
             name="action_adk",
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash",
             description="Executes dynamic workflow actions on content based on user queries",
             instruction="You process content dynamically based on user queries. Use process_with_dynamic_query for all content processing.",
-            tools=[process_with_dynamic_query]
+            tools=[process_with_dynamic_query],
+            generation_config=config
         )
     
     async def execute_action(self, user_query: str, event_data: dict, config: dict) -> dict:
