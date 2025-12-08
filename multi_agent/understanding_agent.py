@@ -1,7 +1,7 @@
 # Understanding Agent - Parses natural language to workflow using LLM
 from google import genai
 from google.genai import types
-from google.adk.agents import Agent
+from google.adk.agents import Agent, LoopAgent
 from config import GEMINI_API_KEY
 import json
 
@@ -31,15 +31,21 @@ def parse_natural_language(user_input: str) -> dict:
 class UnderstandingAgent:
     def __init__(self):
         self.client = genai.Client(api_key=GEMINI_API_KEY)
-        self.model = "gemini-2.0-flash-exp"
+        self.model = "gemini-2.5-flash"
         
-        # Google ADK Agent
+        config = types.GenerateContentConfig(
+            temperature=0.1,
+            top_p=0.95,
+            max_output_tokens=1024
+        )
+        
         self.adk_agent = Agent(
             name="understanding_adk",
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash",
             description="Parses natural language workflow requests",
             instruction="You parse user requests into structured workflows with triggers, actions, and outputs.",
-            tools=[parse_natural_language]
+            tools=[parse_natural_language],
+            generation_config=config
         )
     
     async def parse_workflow(self, user_input: str) -> dict:
