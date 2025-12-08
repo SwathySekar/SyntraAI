@@ -3,6 +3,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from google.adk.agents import Agent
+from google.genai import types
 import os
 import datetime
 
@@ -46,13 +47,19 @@ class DeliveryAgent:
             "from_name": SMTP_FROM_NAME
         }
         
-        # Google ADK Agent
+        config = types.GenerateContentConfig(
+            temperature=0.1,
+            top_p=0.95,
+            max_output_tokens=1024
+        )
+        
         self.adk_agent = Agent(
             name="delivery_adk",
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash",
             description="Delivers workflow results via multiple channels",
             instruction="You deliver results via email, popup, or file based on user preferences.",
-            tools=[send_email_delivery, create_popup_delivery, save_file_delivery]
+            tools=[send_email_delivery, create_popup_delivery, save_file_delivery],
+            generation_config=config
         )
     
     async def deliver(self, results: list, output_method: str, event_data: dict) -> dict:
