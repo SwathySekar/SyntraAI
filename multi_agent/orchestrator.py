@@ -1,6 +1,7 @@
-# Orchestrator Agent - Coordinates all agents using Google ADK pattern with LLM triggers
+# Orchestrator Agent - Coordinates all agents using Google ADK SequentialAgent
 from typing import Dict, List
-from google.adk.agents import Agent
+from google.adk.agents import Agent, SequentialAgent
+from google.genai import types
 import datetime
 from zoneinfo import ZoneInfo
 
@@ -23,16 +24,24 @@ class OrchestratorAgent:
         self.trigger = trigger_agent
         self.action = action_agent
         self.delivery = delivery_agent
-        self.llm_trigger = llm_trigger_agent  # New LLM-based trigger agent
+        self.llm_trigger = llm_trigger_agent
         self.active_workflows = []
         
-        # Google ADK Agent for orchestration
-        self.adk_agent = Agent(
-            name="orchestrator_adk",
-            model="gemini-2.0-flash",
-            description="Coordinates all workflow agents using Google ADK",
-            instruction="You coordinate workflow execution across understanding, trigger, action, and delivery agents.",
-            tools=[coordinate_workflow, get_workflow_status]
+        # ADK SequentialAgent for guaranteed execution order
+        config = types.GenerateContentConfig(
+            temperature=0.1,
+            top_p=0.95,
+            max_output_tokens=2048
+        )
+        
+        self.sequential_pipeline = SequentialAgent(
+            agents=[
+                understanding_agent.adk_agent,
+                action_agent.adk_agent,
+                delivery_agent.adk_agent
+            ],
+            model="gemini-2.5-flash",
+            generation_config=config
         )
     
     async def process_user_request(self, user_input: str) -> Dict:
